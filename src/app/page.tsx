@@ -1,69 +1,146 @@
-import Image from "next/image";
+import Link from "next/link";
+import type { Metadata } from "next";
+import {
+  getCategories,
+  getArticlesByCategory,
+  getLeadStory,
+  getTrendingArticles,
+} from "@/lib/queries";
+import {
+  ArticleCard,
+  type ArticleCardData,
+} from "@/components/article-card";
+import { formatDate, readingTime } from "@/lib/utils";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Construction News & Analysis",
+};
+
+export default async function HomePage() {
+  const [leadStory, categories, trending] = await Promise.all([
+    getLeadStory(),
+    getCategories(),
+    getTrendingArticles(6),
+  ]);
+
+  const categoryArticles = await Promise.all(
+    categories.map((c) => getArticlesByCategory(c.slug, { limit: 3 })),
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      {/* Hero */}
+      <section className="py-8">
+        {leadStory ? (
+          <div className="grid gap-8 lg:grid-cols-3">
+            <Link
+              href={`/articles/${leadStory.slug}`}
+              className="group col-span-2 block"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <div className="flex h-full flex-col justify-between gap-6 rounded-xl bg-charcoal p-6 text-white sm:p-8">
+                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-white/60">
+                  <span className="rounded-full bg-accent px-2.5 py-1 text-white">
+                    Lead story
+                  </span>
+                  <span>{leadStory.category.name}</span>
+                  {leadStory.region && <span>{leadStory.region}</span>}
+                </div>
+                <div>
+                  <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
+                    {leadStory.title}
+                  </h1>
+                  <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70">
+                    {leadStory.excerpt}
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/60">
+                    <span className="font-medium text-white">
+                      {leadStory.authorName}
+                    </span>
+                    <span aria-hidden>·</span>
+                    <time>{formatDate(leadStory.publishedAt)}</time>
+                    <span aria-hidden>·</span>
+                    <span>{readingTime(leadStory.body)} min read</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <aside className="flex flex-col gap-5 border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-sm font-bold uppercase tracking-wider text-ink">
+                  Trending
+                </h2>
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+              </div>
+              {trending.map((a, i) => (
+                <div key={a.id} className="flex items-start gap-3">
+                  <span className="font-display text-xl font-extrabold text-line">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-ink">
+                    <Link
+                      href={`/articles/${a.slug}`}
+                      className="transition-colors hover:text-accent-strong"
+                    >
+                      {a.title}
+                    </Link>
+                  </h3>
+                </div>
+              ))}
+            </aside>
+          </div>
+        ) : (
+          <p className="py-16 text-center text-muted">No stories published yet.</p>
+        )}
+      </section>
+
+      {/* Category sections */}
+      <section className="grid gap-12 border-t border-line py-12">
+        {categories.map((category, i) => {
+          const items = categoryArticles[i] ?? [];
+          if (!items.length) return null;
+          const [first, ...rest] = items as ArticleCardData[];
+          return (
+            <div
+              key={category.slug}
+              className="grid gap-8 lg:grid-cols-3"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <div>
+                <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink">
+                  <Link
+                    href={`/category/${category.slug}`}
+                    className="transition-colors hover:text-accent-strong"
+                  >
+                    {category.name}
+                  </Link>
+                </h2>
+                {category.description && (
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {category.description}
+                  </p>
+                )}
+                <Link
+                  href={`/category/${category.slug}`}
+                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent-strong hover:underline"
+                >
+                  View all
+                  <span aria-hidden>→</span>
+                </Link>
+              </div>
+
+              <div className="border-t border-line lg:border-t-0">
+                <ArticleCard article={first} />
+              </div>
+
+              <div className="flex flex-col gap-6 border-t border-line pt-6 lg:border-t-0">
+                {rest.map((a) => (
+                  <ArticleCard key={a.slug} article={a} horizontal />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </section>
     </div>
   );
 }
