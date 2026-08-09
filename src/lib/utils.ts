@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(date: Date | string | null | undefined) {
   if (!date) return "";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -16,7 +16,7 @@ export function formatDate(date: Date | string | null | undefined) {
 
 export function formatDateLong(date: Date | string | null | undefined) {
   if (!date) return "";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     year: "numeric",
     month: "long",

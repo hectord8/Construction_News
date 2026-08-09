@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "BuildWire covers the construction industry: projects, materials, regulation and the technology changing how we build.",
+    "BuildWire covers the UK construction industry: projects, materials, regulation and the technology changing how we build.",
 };
 
 export default function AboutPage() {
@@ -28,10 +28,11 @@ export default function AboutPage() {
         </p>
         <h2>What we cover</h2>
         <p>
-          Our sections follow the shape of the industry itself: commercial and
-          residential construction, infrastructure and public works, safety and
-          regulation, materials and equipment, and the technology that is
-          quietly changing every phase of a project.
+          Our sections follow the shape of the UK industry itself: commercial
+          and residential construction, infrastructure and public works, safety
+          and regulation, materials and equipment, and the technology that is
+          quietly changing every phase of a project — from London to Glasgow,
+          Cardiff to Belfast.
         </p>
         <h2>Our approach</h2>
         <p>

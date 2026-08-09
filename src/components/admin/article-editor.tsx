@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveArticle } from "@/server/admin";
 import { slugify } from "@/lib/utils";
+import { REGIONS } from "@/lib/regions";
 import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 
@@ -208,7 +209,13 @@ export function ArticleEditor({ article, categories, allTags }: EditorProps) {
               onChange={(e) => setRegion(e.target.value)}
               className={field}
               placeholder="National"
+              list="region-suggestions"
             />
+            <datalist id="region-suggestions">
+              {REGIONS.map((r) => (
+                <option key={r} value={r} />
+              ))}
+            </datalist>
           </div>
 
           <div>

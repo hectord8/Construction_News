@@ -95,7 +95,7 @@ export default async function HomePage() {
       </section>
 
       {/* Category sections */}
-      <section className="grid gap-12 border-t border-line py-12">
+      <section className="grid divide-y divide-line gap-16 border-t border-line py-12">
         {categories.map((category, i) => {
           const items = categoryArticles[i] ?? [];
           if (!items.length) return null;
@@ -103,7 +103,7 @@ export default async function HomePage() {
           return (
             <div
               key={category.slug}
-              className="grid gap-8 lg:grid-cols-3"
+              className="grid gap-8 pt-12 lg:grid-cols-3 [&:first-child]:pt-0 pb-16"
             >
               <div>
                 <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink">
@@ -132,7 +132,7 @@ export default async function HomePage() {
                 <ArticleCard article={first} />
               </div>
 
-              <div className="flex flex-col gap-6 border-t border-line pt-6 lg:border-t-0">
+              <div className="flex flex-col gap-6 pt-6 lg:pt-0">
                 {rest.map((a) => (
                   <ArticleCard key={a.slug} article={a} horizontal />
                 ))}

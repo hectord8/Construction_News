@@ -2,17 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
-
-const REGIONS = [
-  "National",
-  "Northeast",
-  "Southeast",
-  "Midwest",
-  "South",
-  "Southwest",
-  "West",
-  "Northwest",
-];
+import { REGIONS } from "@/lib/regions";
 
 export function SearchForm({
   categories,

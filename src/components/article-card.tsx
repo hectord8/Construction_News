@@ -50,8 +50,8 @@ export function ArticleCard({
   return (
     <article
       className={cn(
-        "group flex",
-        horizontal ? "gap-4" : "flex-col gap-3",
+        "group flex rounded-xl border border-line",
+        horizontal ? "flex-1 gap-5 p-3" : "h-full flex-col gap-3 p-4",
       )}
     >
       {article.coverImage && (
@@ -70,7 +70,7 @@ export function ArticleCard({
           />
         </Link>
       )}
-      <div className={cn("flex min-w-0 flex-col", horizontal && "gap-1")}>
+      <div className={cn("flex min-w-0 flex-col", horizontal ? "gap-1" : "flex-1")}>
         <CategoryBadge
           name={article.categoryName ?? article.categorySlug}
           slug={article.categorySlug}
@@ -88,7 +88,7 @@ export function ArticleCard({
             {article.excerpt}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+        <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-xs text-muted">
           <span className="font-medium text-ink">{article.authorName}</span>
           <span aria-hidden>·</span>
           <time dateTime={String(article.publishedAt)}>
