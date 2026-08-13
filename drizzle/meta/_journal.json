@@ -8,6 +8,34 @@
       "when": 1785992388359,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786594483704,
+      "tag": "0001_strange_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786594604331,
+      "tag": "0002_smooth_sally_floyd",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786594664150,
+      "tag": "0003_serious_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786594988723,
+      "tag": "0004_dusty_sharon_ventura",
+      "breakpoints": true
     }
   ]
 }

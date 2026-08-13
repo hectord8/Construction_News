@@ -1,15 +1,16 @@
 import { relations, sql, type SQL } from "drizzle-orm";
 import {
+  boolean,
   customType,
   index,
   integer,
+  numeric,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
-  boolean,
 } from "drizzle-orm/pg-core";
 
 export const articleStatusEnum = pgEnum("article_status", [
@@ -63,6 +64,8 @@ export const articles = pgTable(
     featured: boolean("featured").notNull().default(false),
     leadStory: boolean("lead_story").notNull().default(false),
     region: text("region"),
+    sourceUrl: text("source_url").unique(),
+    sourceName: text("source_name"),
     authorId: uuid("author_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -167,6 +170,43 @@ export const contactMessages = pgTable("contact_messages", {
     .notNull(),
 });
 
+export const materials = pgTable("materials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category"),
+  unit: text("unit"),
+  sourceSeries: text("source_series"),
+  description: text("description"),
+  order: integer("order").default(0),
+  anchorPrice: numeric("anchor_price"),
+  anchorIndex: numeric("anchor_index"),
+  anchorPeriod: text("anchor_period"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const materialPrices = pgTable(
+  "material_prices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    materialId: uuid("material_id")
+      .notNull()
+      .references(() => materials.id, { onDelete: "cascade" }),
+    value: numeric("value").notNull(),
+    period: text("period").notNull(),
+    asOf: timestamp("as_of", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("material_prices_unique").on(table.materialId, table.period),
+    index("material_prices_material_idx").on(table.materialId),
+  ],
+);
+
 export const categoriesRelations = relations(categories, ({ many }) => ({
   articles: many(articles),
   followedCategories: many(followedCategories),
@@ -225,4 +265,15 @@ export const usersRelations = relations(users, ({ many }) => ({
   articles: many(articles),
   savedArticles: many(savedArticles),
   followedCategories: many(followedCategories),
+}));
+
+export const materialsRelations = relations(materials, ({ many }) => ({
+  prices: many(materialPrices),
+}));
+
+export const materialPricesRelations = relations(materialPrices, ({ one }) => ({
+  material: one(materials, {
+    fields: [materialPrices.materialId],
+    references: [materials.id],
+  }),
 }));

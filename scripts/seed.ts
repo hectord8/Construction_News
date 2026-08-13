@@ -779,6 +779,7 @@ The funding window is a one-time opportunity, and the closing is now as importan
           Date.now() - s.daysAgo * 24 * 60 * 60 * 1000,
         ),
       })
+      .onConflictDoNothing()
       .returning({ id: articles.id });
 
     if (inserted && s.tagSlugs.length) {
