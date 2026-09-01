@@ -22,6 +22,7 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
       href: `/category/${c.slug}`,
       label: c.name,
     })),
+    { href: "/prices", label: "Prices" },
     { href: "/about", label: "About" },
   ];
 

@@ -14,6 +14,7 @@ const footerNav = {
     { label: "Safety & Regulation", href: "/category/safety-regulation" },
     { label: "Materials & Equipment", href: "/category/materials-equipment" },
     { label: "Technology", href: "/category/technology" },
+    { label: "Prices", href: "/prices" },
   ],
   Account: [
     { label: "Sign in", href: "/sign-in" },

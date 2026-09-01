@@ -36,10 +36,12 @@ export default async function DashboardPage() {
     getCategories(),
   ]);
 
-  const savedArticlesData = saved.map((s) => ({
-    ...s.article,
-    tags: s.article.tags.map((t) => t.tag.slug),
-  }));
+  const savedArticlesData = saved
+    .filter((s) => s.article.status === "published")
+    .map((s) => ({
+      ...s.article,
+      tags: s.article.tags.map((t) => t.tag.slug),
+    }));
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">

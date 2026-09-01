@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 type EditorProps = {
   article?: {
-    id: string;
+    id?: string;
     title: string;
     slug: string;
     excerpt: string;

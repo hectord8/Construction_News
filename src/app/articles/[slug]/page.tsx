@@ -131,6 +131,17 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </header>
 
+        {article.coverImage && (
+          <div className="my-8 overflow-hidden rounded-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={article.coverImage}
+              alt={article.title}
+              className="h-auto w-full object-cover"
+            />
+          </div>
+        )}
+
         <div className="py-8">
           <Markdown>{article.body}</Markdown>
         </div>

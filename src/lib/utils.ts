@@ -38,3 +38,13 @@ export function readingTime(markdown: string) {
   const words = markdown.trim().split(/\s+/).length;
   return Math.max(1, Math.ceil(words / 220));
 }
+
+export function formatPrice(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return "—";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+  }).format(n);
+}

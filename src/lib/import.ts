@@ -1,7 +1,8 @@
 import * as cheerio from "cheerio";
+import type { AnyNode, Element } from "domhandler";
 import { eq, or, like } from "drizzle-orm";
 import { db } from "./db";
-import { articles } from "./db/schema";
+import { articles, categories } from "./db/schema";
 import { RSS_SOURCES } from "./rss-sources";
 
 export type RssEntry = {
@@ -77,7 +78,7 @@ export function htmlToMarkdown(html: string): string {
   $("script, style, noscript, iframe, nav, aside, form, button").remove();
 
   const lines: string[] = [];
-  const walk = (el: any) => {
+  const walk = (el: AnyNode) => {
     if (el.type === "text") {
       lines.push(el.data ?? "");
       return;
@@ -207,10 +208,10 @@ function firstContentImage($: cheerio.CheerioAPI): string | null {
   ]) {
     const imgs = $(sel).toArray();
     for (const img of imgs) {
-      const el = img as any;
-      const src = el.attribs?.src;
-      const w = parseInt(el.attribs?.width ?? "", 10);
-      const h = parseInt(el.attribs?.height ?? "", 10);
+      const el = img as Element;
+      const src = el.attribs.src;
+      const w = parseInt(el.attribs.width ?? "", 10);
+      const h = parseInt(el.attribs.height ?? "", 10);
       if (!src || bad.test(src)) continue;
       if ((Number.isFinite(w) && w < 120) || (Number.isFinite(h) && h < 120)) {
         continue;
@@ -232,14 +233,14 @@ function extractBodyMarkdown($: cheerio.CheerioAPI): string {
     ".story-body",
   ];
 
-  let bestEl: any = null;
+  let bestEl: Element | null = null;
   let bestScore = 0;
   for (const sel of candidates) {
     $(sel).each((_, el) => {
       const text = $(el).text();
       const score = text.length;
       if (score > bestScore) {
-        bestEl = el;
+        bestEl = el as Element;
         bestScore = score;
       }
     });
@@ -257,7 +258,7 @@ function extractBodyMarkdown($: cheerio.CheerioAPI): string {
     .remove();
 
   $container.find("a").each((_, el) => {
-    const href = (el as any).attribs?.href ?? "";
+    const href = (el as Element).attribs.href ?? "";
     if (
       /twitter\.com\/intent|facebook\.com\/share|facebook\.com\/sharer|linkedin\.com\/share|linkedin\.com\/shareArticle|mailto:|whatsapp\.com|pinterest\.com\/pin|reddit\.com\/submit|addtoany/i.test(
         href,
@@ -349,7 +350,7 @@ export async function runRssImport(): Promise<ImportSummary> {
         }
 
         const category = await db.query.categories.findFirst({
-          where: eq(articles.categorySlug, source.categorySlug),
+          where: eq(categories.slug, source.categorySlug),
         });
         if (!category) {
           skipped++;

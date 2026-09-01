@@ -8,8 +8,6 @@ import {
   contactMessages,
   newsletterSubscribers,
 } from "@/lib/db/schema";
-import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { headers } from "next/headers";
 
 export type FormResult = {
   ok: boolean;
@@ -24,15 +22,6 @@ const contactSchema = z.object({
 });
 
 export async function submitContact(formData: FormData): Promise<FormResult> {
-  const ip = clientIp(await headers());
-  const limit = rateLimit(`contact:${ip}`, 5);
-  if (limit.limited) {
-    return {
-      ok: false,
-      message: "Too many messages. Please try again in a few minutes.",
-    };
-  }
-
   const parsed = contactSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -57,15 +46,6 @@ const newsletterSchema = z.object({
 export async function subscribeNewsletter(
   formData: FormData,
 ): Promise<FormResult> {
-  const ip = clientIp(await headers());
-  const limit = rateLimit(`newsletter:${ip}`, 5);
-  if (limit.limited) {
-    return {
-      ok: false,
-      message: "Too many requests. Please try again in a few minutes.",
-    };
-  }
-
   const parsed = newsletterSchema.safeParse({
     email: formData.get("email"),
   });
@@ -80,12 +60,14 @@ export async function subscribeNewsletter(
 
   if (existing) {
     if (existing.status === "unsubscribed") {
-      await db
-        .update(newsletterSubscribers)
-        .set({ status: "subscribed" })
-        .where(eq(newsletterSubscribers.email, email));
+      // Don't automatically re-subscribe - require explicit action
+      return {
+        ok: false,
+        message:
+          "This email was previously unsubscribed. Please contact us to re-subscribe.",
+      };
     }
-    return { ok: true, message: "You're on the list — welcome (back)!" };
+    return { ok: true, message: "You're already on the list — welcome back!" };
   }
 
   await db.insert(newsletterSubscribers).values({

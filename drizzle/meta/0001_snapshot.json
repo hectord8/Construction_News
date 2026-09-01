@@ -1,5 +1,5 @@
 {
-  "id": "c1b02296-6830-4ca6-93a6-5a57f141aa8c",
+  "id": "a6c96448-ce17-41b5-88da-967b478ad594",
   "prevId": "f274501f-a23d-46a6-8536-e43f5ebb9734",
   "version": "7",
   "dialect": "postgresql",
@@ -312,13 +312,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
-        },
-        "articles_source_url_unique": {
-          "name": "articles_source_url_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "source_url"
           ]
         }
       },

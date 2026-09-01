@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, desc, eq, gte, inArray, sql, lt } from "drizzle-orm";
 import { db } from "./db";
+import { nextDateParam, parseDateParam } from "./validation";
 import { articles, articleTags, categories, tags } from "./db/schema";
 
 export type ArticleWithCategory = typeof articles.$inferSelect & {
@@ -259,10 +260,12 @@ export async function searchArticles(params: {
     conditions.push(eq(articles.region, params.region));
   }
   if (params.from) {
-    conditions.push(gte(articles.publishedAt, new Date(params.from)));
+    const from = parseDateParam(params.from);
+    if (from) conditions.push(gte(articles.publishedAt, from));
   }
   if (params.to) {
-    conditions.push(lt(articles.publishedAt, new Date(params.to)));
+    const to = nextDateParam(params.to);
+    if (to) conditions.push(lt(articles.publishedAt, to));
   }
 
   if (params.query) {
@@ -303,4 +306,118 @@ export async function getAllPublishedArticleSlugs() {
     .from(articles)
     .where(eq(articles.status, "published"));
   return rows;
+}
+
+export type MaterialPriceData = {
+  material: {
+    id: string;
+    slug: string;
+    name: string;
+    category: string | null;
+    unit: string | null;
+    description: string | null;
+    order: number | null;
+    anchorPrice: string | null;
+    anchorIndex: string | null;
+    anchorPeriod: string | null;
+    updatedAt: Date;
+  };
+  latestIndex: number | null;
+  latestPeriod: string | null;
+  prevIndex: number | null;
+  prevPeriod: string | null;
+  yearAgoIndex: number | null;
+  yearAgoPeriod: string | null;
+  momPct: number | null;
+  yoyPct: number | null;
+  estPrice: number | null;
+  sparkline: { period: string; value: number }[];
+};
+
+export async function getMaterialPrices(): Promise<MaterialPriceData[]> {
+  const allMaterials = await db.query.materials.findMany({
+    orderBy: (m, { asc }) => [asc(m.order)],
+  });
+
+  const results: MaterialPriceData[] = [];
+
+  for (const material of allMaterials) {
+    const prices = await db.query.materialPrices.findMany({
+      where: (p, { eq }) => eq(p.materialId, material.id),
+      orderBy: (p, { desc }) => [desc(p.period)],
+    });
+
+    if (prices.length === 0) {
+      results.push({
+        material,
+        latestIndex: null,
+        latestPeriod: null,
+        prevIndex: null,
+        prevPeriod: null,
+        yearAgoIndex: null,
+        yearAgoPeriod: null,
+        momPct: null,
+        yoyPct: null,
+        estPrice: null,
+        sparkline: [],
+      });
+      continue;
+    }
+
+    const latest = prices[0];
+    const latestIndex = parseFloat(latest.value);
+    const latestPeriod = latest.period;
+
+    // Previous month (index 1)
+    const prev = prices[1];
+    const prevIndex = prev ? parseFloat(prev.value) : null;
+    const prevPeriod = prev?.period ?? null;
+
+    // Year ago (index 12)
+    const yearAgo = prices[12];
+    const yearAgoIndex = yearAgo ? parseFloat(yearAgo.value) : null;
+    const yearAgoPeriod = yearAgo?.period ?? null;
+
+    // Calculate percentages
+    const momPct =
+      prevIndex !== null && prevIndex !== 0
+        ? ((latestIndex - prevIndex) / prevIndex) * 100
+        : null;
+    const yoyPct =
+      yearAgoIndex !== null && yearAgoIndex !== 0
+        ? ((latestIndex - yearAgoIndex) / yearAgoIndex) * 100
+        : null;
+
+    // Calculate estimated price
+    let estPrice: number | null = null;
+    if (material.anchorPrice && material.anchorIndex) {
+      const anchorPrice = parseFloat(material.anchorPrice);
+      const anchorIndex = parseFloat(material.anchorIndex);
+      if (anchorIndex !== 0) {
+        estPrice = (anchorPrice * latestIndex) / anchorIndex;
+      }
+    }
+
+    // Sparkline: last 12 months
+    const sparkline = prices
+      .slice(0, 12)
+      .reverse()
+      .map((p) => ({ period: p.period, value: parseFloat(p.value) }));
+
+    results.push({
+      material,
+      latestIndex,
+      latestPeriod,
+      prevIndex,
+      prevPeriod,
+      yearAgoIndex,
+      yearAgoPeriod,
+      momPct,
+      yoyPct,
+      estPrice,
+      sparkline,
+    });
+  }
+
+  return results;
 }

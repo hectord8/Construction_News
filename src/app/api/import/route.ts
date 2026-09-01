@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error("Import failed:", err);
     return NextResponse.json(
-      { error: "Import failed", message: err instanceof Error ? err.message : String(err) },
+      { error: "Import failed" },
       { status: 500 },
     );
   }

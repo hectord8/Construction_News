@@ -23,7 +23,7 @@ export async function deleteAccount(): Promise<FormResult> {
   try {
     await (await clerkClient()).users.deleteUser(user.clerkId);
   } catch {
-    // Clerk account may already be gone — still clean up local data.
+    throw new Error("We could not delete your account. Please try again.");
   }
 
   await db.delete(savedArticles).where(eq(savedArticles.userId, user.id));

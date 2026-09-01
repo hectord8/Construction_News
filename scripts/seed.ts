@@ -132,6 +132,7 @@ async function main() {
     title: string;
     excerpt: string;
     body: string;
+    coverImage?: string;
     categorySlug: string;
     tagSlugs: string[];
     region?: string;
@@ -153,6 +154,7 @@ async function main() {
         "Councils and National Highways Commit Record Funding to Replace Ageing Bridges",
       excerpt:
         "A new wave of funding from the road investment strategy and council capital programmes is set to release £3.2 billion in bridge-replacement contracts this year, reshaping the infrastructure pipeline for civil contractors.",
+      coverImage: "https://images.unsplash.com/photo-1545552987-720aa38014c1?w=1200&h=800&fit=crop",
       body: `Some of the country's oldest bridge assets are getting a long-awaited financial shot in the arm. National Highways and local authorities are now moving more than £3.2 billion in bridge-replacement and rehabilitation work into procurement this year, according to a BuildWire analysis of capital programmes and government grant awards.
 
 ## Where the money is going
@@ -189,6 +191,7 @@ The window for bidding is open now, and firms that prequalify early are position
       title: "HSE Tightens Rules on Crane and Lifting Operations",
       excerpt:
         "Updated guidance under the Lifting Operations and Lifting Equipment Regulations adds tougher competence checks and record-keeping duties for firms running cranes on UK sites.",
+      coverImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&h=800&fit=crop",
       body: `After a period of sustained enforcement pressure, the Health and Safety Executive (HSE) has published updated guidance on crane and lifting operations. The changes tighten expectations around competence, thorough examination and lift planning under LOLER 1998 and PUWER 1998.
 
 ## What changes
@@ -220,6 +223,7 @@ Contractor associations welcomed the clearer competence path but flagged the pap
       title: "Build-to-Rent Starts Slide as Financing Costs Bite Developer Pipeline",
       excerpt:
         "Apartment and build-to-rent starts fell 9% quarter-on-quarter as higher borrowing costs push developers to shelve schemes — but a tailwind is building for 2028 completions.",
+      coverImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=800&fit=crop",
       body: `The build-to-rent boom is losing steam at the start of this year, with new apartment starts down 9% from the previous quarter and site-starts at a two-year low, according to the latest ONS and industry housebuilding data.
 
 ## Why projects are stalling
@@ -244,6 +248,7 @@ The consensus among developers is that this year remains one of digestion, with 
       title: "Concrete Prices Climb as Cement Capacity Constraint Bites",
       excerpt:
         "Ready-mix prices rose for the fifth straight quarter, driven by tight UK cement supply and rising energy and freight costs. Contractors are hedging with alternate mix designs.",
+      coverImage: "https://images.unsplash.com/photo-1590496793929-36417d3117de?w=1200&h=800&fit=crop",
       body: `Ready-mix concrete prices rose for the fifth consecutive quarter, according to the latest producer price data, with regional increases ranging from 3% to 9% depending on market tightness. The persistent climb is now feeding directly into bid pricing on commercial and infrastructure work.
 
 ## The cement bottleneck
@@ -768,6 +773,7 @@ The funding window is a one-time opportunity, and the closing is now as importan
         slug: slug(s.title),
         excerpt: s.excerpt,
         body: s.body,
+        coverImage: s.coverImage,
         categorySlug: s.categorySlug,
         status: "published",
         featured: s.featured ?? false,

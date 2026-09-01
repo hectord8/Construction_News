@@ -11,25 +11,31 @@ import {
   contactMessages,
   newsletterSubscribers,
   tags,
+  materials,
 } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import {
+  optionalHttpUrlSchema,
+  regionSchema,
+  slugSchema,
+} from "@/lib/validation";
 
 export type ActionResult = { ok: boolean; message: string; id?: string };
 
 const articleSchema = z.object({
   title: z.string().min(5).max(200),
-  slug: z.string().min(3).max(200),
+  slug: slugSchema.min(3),
   excerpt: z.string().min(20).max(500),
   body: z.string().min(20),
-  categorySlug: z.string(),
-  coverImage: z.string().max(2000).nullable(),
-  region: z.string().max(100).nullable(),
+  categorySlug: slugSchema,
+  coverImage: optionalHttpUrlSchema.nullable(),
+  region: regionSchema.nullable(),
   status: z.enum(["draft", "published"]),
   featured: z.boolean(),
   leadStory: z.boolean(),
   authorName: z.string().min(1).max(100),
-  tagSlugs: z.array(z.string()).max(10),
+  tagSlugs: z.array(slugSchema).max(10),
 });
 
 export async function saveArticle(
@@ -61,6 +67,10 @@ export async function saveArticle(
   }
 
   const data = parsed.data;
+  const category = await db.query.categories.findFirst({
+    where: eq(categories.slug, data.categorySlug),
+  });
+  if (!category) return { ok: false, message: "Please choose a valid category." };
 
   if (id) {
     await db
@@ -130,6 +140,9 @@ export async function saveArticle(
 
 export async function deleteArticle(id: string): Promise<ActionResult> {
   await requireAdmin();
+  if (!z.uuid().safeParse(id).success) {
+    return { ok: false, message: "Article not found." };
+  }
   await db.delete(articles).where(eq(articles.id, id));
   revalidatePath("/admin/articles");
   revalidatePath("/");
@@ -138,12 +151,24 @@ export async function deleteArticle(id: string): Promise<ActionResult> {
 
 export async function saveCategory(formData: FormData): Promise<ActionResult> {
   await requireAdmin();
-  const slug = String(formData.get("slug"));
-  const name = String(formData.get("name"));
-  const description = String(formData.get("description") ?? "");
-  const order = Number(formData.get("order") ?? 0);
+  const parsed = z
+    .object({
+      slug: slugSchema,
+      name: z.string().trim().min(1).max(100),
+      description: z.string().trim().max(500),
+      order: z.coerce.number().int().min(-10000).max(10000),
+    })
+    .safeParse({
+      slug: formData.get("slug"),
+      name: formData.get("name"),
+      description: formData.get("description") ?? "",
+      order: formData.get("order") ?? 0,
+    });
 
-  if (!slug || !name) return { ok: false, message: "Slug and name required." };
+  if (!parsed.success) {
+    return { ok: false, message: "Please fix the category details." };
+  }
+  const { slug, name, description, order } = parsed.data;
 
   await db
     .insert(categories)
@@ -160,6 +185,9 @@ export async function saveCategory(formData: FormData): Promise<ActionResult> {
 
 export async function deleteCategory(slug: string): Promise<ActionResult> {
   await requireAdmin();
+  if (!slugSchema.safeParse(slug).success) {
+    return { ok: false, message: "Category not found." };
+  }
   try {
     await db.delete(categories).where(eq(categories.slug, slug));
   } catch {
@@ -175,6 +203,9 @@ export async function deleteCategory(slug: string): Promise<ActionResult> {
 
 export async function toggleMessageRead(id: string): Promise<ActionResult> {
   await requireAdmin();
+  if (!z.uuid().safeParse(id).success) {
+    return { ok: false, message: "Message not found." };
+  }
   const msg = await db.query.contactMessages.findFirst({
     where: eq(contactMessages.id, id),
   });
@@ -189,6 +220,9 @@ export async function toggleMessageRead(id: string): Promise<ActionResult> {
 
 export async function deleteMessage(id: string): Promise<ActionResult> {
   await requireAdmin();
+  if (!z.uuid().safeParse(id).success) {
+    return { ok: false, message: "Message not found." };
+  }
   await db.delete(contactMessages).where(eq(contactMessages.id, id));
   revalidatePath("/admin/messages");
   return { ok: true, message: "Message deleted." };
@@ -196,10 +230,63 @@ export async function deleteMessage(id: string): Promise<ActionResult> {
 
 export async function unsubscribeSubscriber(id: string): Promise<ActionResult> {
   await requireAdmin();
+  if (!z.uuid().safeParse(id).success) {
+    return { ok: false, message: "Subscriber not found." };
+  }
   await db
     .update(newsletterSubscribers)
     .set({ status: "unsubscribed" })
     .where(eq(newsletterSubscribers.id, id));
   revalidatePath("/admin/subscribers");
   return { ok: true, message: "Unsubscribed." };
+}
+
+export async function saveMaterialAnchors(
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = z
+    .object({
+      id: z.uuid(),
+      anchorPrice: z.string().trim().regex(/^\d+(?:\.\d+)?$/).nullable(),
+      anchorIndex: z.string().trim().regex(/^\d+(?:\.\d+)?$/).nullable(),
+      anchorPeriod: z.string().trim().min(1).max(30).nullable(),
+    })
+    .safeParse({
+      id: formData.get("id"),
+      anchorPrice: formData.get("anchorPrice") || null,
+      anchorIndex: formData.get("anchorIndex") || null,
+      anchorPeriod: formData.get("anchorPeriod") || null,
+    });
+
+  if (!parsed.success) {
+    return { ok: false, message: "Please enter valid price anchors." };
+  }
+  const { id, anchorPrice, anchorIndex, anchorPeriod } = parsed.data;
+
+  await db
+    .update(materials)
+    .set({
+      anchorPrice,
+      anchorIndex,
+      anchorPeriod,
+      updatedAt: new Date(),
+    })
+    .where(eq(materials.id, id));
+
+  revalidatePath("/admin/prices");
+  revalidatePath("/prices");
+  revalidatePath("/");
+  return { ok: true, message: "Anchors saved." };
+}
+
+export async function refreshPrices(): Promise<ActionResult> {
+  await requireAdmin();
+  // Trigger the refresh script via a child process
+  // In production, this would be handled by Railway cron
+  // For now, we just revalidate the paths
+  revalidatePath("/admin/prices");
+  revalidatePath("/prices");
+  revalidatePath("/");
+  return { ok: true, message: "Prices refreshed. Run `npm run prices:refresh` for live data." };
 }

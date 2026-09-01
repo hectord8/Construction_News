@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
 
 export default async function AdminLayout({
@@ -8,8 +8,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await isAdmin();
-  if (!admin) redirect("/");
+  try {
+    await requireAdmin();
+  } catch {
+    redirect("/");
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
